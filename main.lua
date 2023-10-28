@@ -1,32 +1,13 @@
--- TODO: Make this into more of a tower defense game instead.
-
-local function load_atlas(image_path, info_path)
-    local atlas_image = love.graphics.newImage(image_path)
-    local atlas_image_width = atlas_image:getWidth()
-    local atlas_image_height = atlas_image:getHeight()
-    local atlas_info = {}
-
-    for line in love.filesystem.lines(info_path) do
-        local sections = line:gmatch("[^;]+")
-        local name, x, y, width, height = sections(), sections(), sections(), sections(), sections()
-        local quad = love.graphics.newQuad(x, y, width, height, atlas_image_width, atlas_image_height)
-        atlas_info[name] = {
-            quad = quad,
-            width = width,
-            height = height,
-        }
-    end
-
-    return atlas_image, atlas_info
-end
-
+local Atlas = require("atlas")
 love.graphics.setDefaultFilter("nearest", "nearest")
+Atlas:load("res/atlas.png", "res/atlasInfo.txt")
 
-local ATLAS_IMAGE, ATLAS_INFO = load_atlas("res/atlas.png", "res/atlasInfo.txt")
-local VIEW_WIDTH, VIEW_HEIGHT = 320, 240
-local SCALE = 2
+local SpriteBatch = require("sprite_batch")
+local Player = require("player")
+
+local VIEW_WIDTH, VIEW_HEIGHT = 640, 480
 local BG_R, BG_G, BG_B = 52 / 255, 28 / 255, 39 / 255
-local SHADOW_SHADER = love.graphics.newShader([[
+local SHADOW_CANVAS_SHADER = love.graphics.newShader([[
 const vec4 shadow_color = vec4(9.0, 10.0, 20.0, 120.0) / 255.0;
 
 vec4 effect(vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
@@ -39,27 +20,62 @@ vec4 effect(vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
 }
 ]])
 
-local canvas = love.graphics.newCanvas(VIEW_WIDTH, VIEW_HEIGHT)
-local sprite_batch = love.graphics.newSpriteBatch(ATLAS_IMAGE, 1000)
+local sprite_batch = SpriteBatch:new(Atlas.image, 1000)
+local shadow_sprite_batch = SpriteBatch:new(Atlas.image, 1000)
 
-local function add_sprite(sprite_batch, sprite, x, y, z, r, scale_x, scale_y)
-    sprite_batch:add(sprite.quad, x, y - z, r, scale_x, scale_y, sprite.width * 0.5, sprite.height * 0.5)
+local player = Player:new(170, 170)
+
+local canvas, shadow_canvas
+local canvas_scale = 1
+function love.resize(width, height)
+    local view_scale = math.min(width / VIEW_WIDTH, height / VIEW_HEIGHT);
+    -- Snap scaling to integer values only.
+    view_scale = math.max(1.0, math.floor(view_scale))
+
+    if canvas then canvas:release() end
+    local canvas_width, canvas_height = width / view_scale, height / view_scale
+    canvas = love.graphics.newCanvas(canvas_width, canvas_height)
+    shadow_canvas = love.graphics.newCanvas(canvas_width, canvas_height)
+    canvas_scale = view_scale
 end
 
-local SHADOW_ROTATION = math.pi * (1 - 0.15)
-local SHADOW_SCALE_X = -1
-local SHADOW_SCALE_Y = 0.9
-local SHADOW_HEIGHT_SCALE = 0.01
-local function add_shadow(sprite_batch, sprite, x, y, z, scale_x, scale_y)
-    local offset_x = sprite.width * 0.15
-    local offset_y = sprite.height * 0.4
-    -- local rotated_offset_x = offset_x * math.cos(r) - offset_y * math.sin(r)
-    -- local rotated_offset_y = offset_x * math.sin(r) + offset_y * math.cos(r)
-    local height_scale = z * SHADOW_HEIGHT_SCALE
-    local shadow_scale_x = scale_x * (SHADOW_SCALE_X + height_scale)
-    local shadow_scale_y = scale_y * (SHADOW_SCALE_Y - height_scale)
-    sprite_batch:add(sprite.quad, x + offset_x, y + offset_y, SHADOW_ROTATION, shadow_scale_x, shadow_scale_y, sprite.width * 0.5, sprite.height * 0.5)
+love.resize(love.graphics.getDimensions())
+
+local TILE_SIZE = 32
+local DECORATION_RANGE = TILE_SIZE * 0.25
+local MAP_WIDTH = 40
+local MAP_HEIGHT = 20
+local DECORATION_DENSITY = 0.15
+local DECORATION_SPRITES = {
+    [1] = Atlas.sprites["Weeds1"],
+    [2] = Atlas.sprites["Weeds2"],
+}
+
+local function map_init(decorations)
+    for y = 0, MAP_HEIGHT do
+        for x = 0, MAP_WIDTH do
+            if math.random() > DECORATION_DENSITY then
+                goto continue
+            end
+
+            local decoration_x = x * TILE_SIZE + (math.random() - 0.5) * DECORATION_RANGE
+            local decoration_y = y * TILE_SIZE + (math.random() - 0.5) * DECORATION_RANGE
+            local decoration_type = math.random(1, 2)
+
+            table.insert(decorations, {
+                x = decoration_x,
+                y = decoration_y,
+                type = decoration_type,
+            })
+
+            ::continue::
+        end
+    end
 end
+
+math.randomseed(777)
+local decorations = {}
+map_init(decorations)
 
 local time = 0
 local PUMPKIN_X, PUMPKIN_Y, pumpkin_z = 100, 100, 0
@@ -75,27 +91,47 @@ function love.update(dt)
     local pumpkin_squash_stretch_progress = math.sin(time * PUMPKIN_BOUNCE_SPEED * 2)
     pumpkin_scale_x = 1 - pumpkin_squash_stretch_progress * PUMPKIN_SQUASH_STRETCH
     pumpkin_scale_y = 1 + pumpkin_squash_stretch_progress * PUMPKIN_SQUASH_STRETCH
+
+    player:update(dt)
 end
 
 function love.draw()
     love.graphics.setCanvas(canvas)
     love.graphics.clear(BG_R, BG_G, BG_B)
 
+    -- Draw ground decorations before everything else.
     sprite_batch:clear()
-    -- sprite_batch:add(ATLAS_INFO["EvilPumpkin"], PLAYER_X + 16, PLAYER_Y + 48, -0.125 * math.pi, 1, -1)
-    add_shadow(sprite_batch, ATLAS_INFO["EvilPumpkin"], PUMPKIN_X, PUMPKIN_Y, pumpkin_z, pumpkin_scale_x, pumpkin_scale_y)
 
-    love.graphics.setShader(SHADOW_SHADER)
-    love.graphics.draw(sprite_batch, 0, 0, 0)
+    for _, decoration in pairs(decorations) do
+        sprite_batch:add_sprite(DECORATION_SPRITES[decoration.type], decoration.x, decoration.y, 0)
+    end
+
+    sprite_batch:draw()
+
+    -- Now draw shadows and other sprites.
+    sprite_batch:clear()
+    shadow_sprite_batch:clear()
+
+    shadow_sprite_batch:add_shadow(Atlas.sprites["EvilPumpkin"], PUMPKIN_X, PUMPKIN_Y, pumpkin_z, pumpkin_scale_x, pumpkin_scale_y)
+
+    sprite_batch:add_sprite(Atlas.sprites["EvilPumpkin"], PUMPKIN_X, PUMPKIN_Y, pumpkin_z, 0, pumpkin_scale_x,
+        pumpkin_scale_y)
+
+    player:draw(sprite_batch, shadow_sprite_batch)
+
+    love.graphics.setCanvas(shadow_canvas)
+    love.graphics.clear(0, 0, 0, 0)
+    shadow_sprite_batch:draw()
+
+    love.graphics.setCanvas(canvas)
+    love.graphics.setShader(SHADOW_CANVAS_SHADER)
+    love.graphics.draw(shadow_canvas)
     love.graphics.setShader()
 
-    sprite_batch:clear()
-    add_sprite(sprite_batch, ATLAS_INFO["EvilPumpkin"], PUMPKIN_X, PUMPKIN_Y, pumpkin_z, 0, pumpkin_scale_x, pumpkin_scale_y)
-
-    love.graphics.draw(sprite_batch, 0, 0, 0)
-
+    sprite_batch:draw()
     love.graphics.setCanvas()
-    love.graphics.draw(canvas, 0, 0, 0, SCALE, SCALE)
+
+    love.graphics.draw(canvas, 0, 0, 0, canvas_scale, canvas_scale)
 
     love.graphics.print("hello world", 0, 0)
 end
