@@ -1,6 +1,10 @@
 local Atlas = require("atlas")
 local GameMath = require("game_math")
+local Map = require("map")
+local Enemy = require("enemy")
 
+local RADIUS = 6
+local DAMAGE = 20
 local SPRITE = Atlas.sprites["Bullet"]
 local MOVE_SPEED = 480
 local COLOR_CHANGE_TIME = 0.15
@@ -13,17 +17,27 @@ local COLOR_R = 232 / 255
 local COLOR_G = 193 / 255
 local COLOR_B = 112 / 255
 
-local Bullet = {}
+local Bullet = {
+    pool = {},
+    allocation_count = 0,
+}
 
 function Bullet:new(x, y, angle)
-    local bullet = {
-        x = x,
-        y = y,
-        angle = angle,
-        dx = math.cos(angle),
-        dy = math.sin(angle),
-        time = 0,
-    }
+    local bullet
+    if #self.pool > 0 then
+        bullet = table.remove(self.pool, #self.pool)
+    else
+        bullet = {}
+        self.allocation_count = self.allocation_count + 1
+    end
+
+    bullet.x = x
+    bullet.y = y
+    bullet.angle = angle
+    bullet.dx = math.cos(angle)
+    bullet.dy = math.sin(angle)
+    bullet.time = 0
+    bullet.is_dead = false
 
     setmetatable(bullet, self)
     self.__index = self
@@ -31,10 +45,29 @@ function Bullet:new(x, y, angle)
     return bullet
 end
 
-function Bullet:update(dt)
+function Bullet:release()
+    table.insert(Bullet.pool, self)
+end
+
+function Bullet:update(dt, enemies, particles)
     self.x = self.x + self.dx * MOVE_SPEED * dt
     self.y = self.y + self.dy * MOVE_SPEED * dt
     self.time = self.time + dt
+
+    if self.x < 0 or self.x >= Map.WIDTH or self.y < 0 or self.y >= Map.HEIGHT then
+        self.is_dead = true
+        return
+    end
+
+    for _, enemy in pairs(enemies) do
+        local distance = GameMath.distance(self.x, self.y, enemy.x, enemy.y)
+
+        if distance < RADIUS + Enemy.RADIUS then
+            self.is_dead = true
+            enemy:take_damage(DAMAGE, particles)
+            return
+        end
+    end
 end
 
 function Bullet:draw(sprite_batch, _)

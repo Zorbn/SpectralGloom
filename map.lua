@@ -1,0 +1,9 @@
+local Map = {}
+
+Map.TILE_SIZE = 32
+Map.WIDTH_TILES = 40
+Map.HEIGHT_TILES = 20
+Map.WIDTH = Map.WIDTH_TILES * Map.TILE_SIZE
+Map.HEIGHT = Map.HEIGHT_TILES * Map.TILE_SIZE
+
+return Map

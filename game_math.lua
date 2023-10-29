@@ -19,4 +19,10 @@ function GameMath.lerp3(a, b, c, delta, midpoint, is_smooth)
     return GameMath.lerp2(b, c, (delta - midpoint) / (1.0 - midpoint), is_smooth)
 end
 
+function GameMath.distance(x1, y1, x2, y2)
+    local dx = x1 - x2
+    local dy = y1 - y2
+    return math.sqrt(dx * dx + dy * dy)
+end
+
 return GameMath

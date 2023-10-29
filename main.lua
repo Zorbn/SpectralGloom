@@ -6,9 +6,11 @@ Atlas:load("res/atlas.png", "res/atlasInfo.txt")
 
 local SpriteBatch = require("sprite_batch")
 local Player = require("player")
-local GameMath = require("game_math")
 local Camera = require("camera")
 local Enemy = require("enemy")
+local Map = require("map")
+local Particle = require("particle")
+local Bullet = require("bullet")
 
 local VIEW_WIDTH, VIEW_HEIGHT = 640, 480
 local BG_R, BG_G, BG_B = 52 / 255, 28 / 255, 39 / 255
@@ -40,12 +42,7 @@ end
 
 love.resize(love.graphics.getDimensions())
 
-local TILE_SIZE = 32
-local DECORATION_RANGE = TILE_SIZE * 0.25
-local MAP_WIDTH_TILES = 40
-local MAP_HEIGHT_TILES = 20
-local MAP_WIDTH = MAP_WIDTH_TILES * TILE_SIZE
-local MAP_HEIGHT = MAP_HEIGHT_TILES * TILE_SIZE
+local DECORATION_RANGE = Map.TILE_SIZE * 0.25
 local DECORATION_DENSITY = 0.15
 local DECORATION_SPRITES = {
     [1] = Atlas.sprites["Weeds1"],
@@ -53,14 +50,14 @@ local DECORATION_SPRITES = {
 }
 
 local function map_init(decorations, enemies)
-    for y = 0, MAP_HEIGHT_TILES do
-        for x = 0, MAP_WIDTH_TILES do
+    for y = 0, Map.HEIGHT_TILES do
+        for x = 0, Map.WIDTH_TILES do
             if math.random() > DECORATION_DENSITY then
                 goto continue
             end
 
-            local decoration_x = x * TILE_SIZE + (math.random() - 0.5) * DECORATION_RANGE
-            local decoration_y = y * TILE_SIZE + (math.random() - 0.5) * DECORATION_RANGE
+            local decoration_x = x * Map.TILE_SIZE + (math.random() - 0.5) * DECORATION_RANGE
+            local decoration_y = y * Map.TILE_SIZE + (math.random() - 0.5) * DECORATION_RANGE
             local decoration_type = math.random(1, 2)
 
             table.insert(decorations, {
@@ -84,6 +81,7 @@ local decorations = {}
 local enemies = {}
 map_init(decorations, enemies)
 local bullets = {}
+local particles = {}
 
 local drawables = {}
 
@@ -92,6 +90,8 @@ local function sort_drawables(a, b)
 end
 
 function love.update(dt)
+    -- print(love.timer.getFPS())
+
     table_clear(drawables)
 
     player:update(dt, camera, bullets)
@@ -100,19 +100,42 @@ function love.update(dt)
 
     for i = #enemies, 1, -1 do
         local enemy = enemies[i]
-        enemy:update(dt, player)
-        table.insert(drawables, enemy)
+        -- enemy:update(dt, player)
+
+        if enemy.is_dead then
+            table.remove(enemies, i)
+        else
+            table.insert(drawables, enemy)
+        end
     end
 
+    print("Particles:", Particle.allocation_count, "Bullets:", Bullet.allocation_count)
+
+    -- local bullet_update_start = os.clock()
     for i = #bullets, 1, -1 do
         local bullet = bullets[i]
-        bullet:update(dt)
+        bullet:update(dt, enemies, particles)
 
-        if bullet.x < 0 or bullet.x >= MAP_WIDTH or bullet.y < 0 or bullet.y >= MAP_HEIGHT then
+        if bullet.is_dead then
             table.remove(bullets, i)
+            bullet:release()
+        else
+            table.insert(drawables, bullet)
         end
+    end
+    -- local bullet_update_end = os.clock()
+    -- print("Bullet update: " .. (bullet_update_end - bullet_update_start) * 1000 .. "ms")
 
-        table.insert(drawables, bullet)
+    for i = #particles, 1, -1 do
+        local particle = particles[i]
+        particle:update(dt)
+
+        if particle.is_dead then
+            table.remove(particles, i)
+            particle:release()
+        else
+            table.insert(drawables, particle)
+        end
     end
 
     table.sort(drawables, sort_drawables)
@@ -136,7 +159,9 @@ function love.draw()
     shadow_sprite_batch:clear()
 
     for _, drawable in ipairs(drawables) do
-        drawable:draw(sprite_batch, shadow_sprite_batch)
+        if not drawable.is_dead then
+            drawable:draw(sprite_batch, shadow_sprite_batch)
+        end
     end
 
     camera:end_draw_to()

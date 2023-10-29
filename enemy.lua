@@ -1,11 +1,19 @@
 local Atlas = require("atlas")
+local Particle = require("particle")
 
+local SPRITE = Atlas.sprites["EvilPumpkin"]
 local MOVE_SPEED = 80
 local BOUNCE_SPEED = 9
 local BOUNCE_HEIGHT = 8
 local SQUASH_STRETCH = 0.1
+local DAMAGE_PARTICLE_COUNT = 3
+local DAMAGE_PARTICLE_RADIUS = SPRITE.width * 0.5
+local DAMAGE_PARTICLE_MIN_HEIGHT = 0
+local DAMAGE_PARTICLE_MAX_HEIGHT = SPRITE.height
 
-local Enemy = {}
+local Enemy = {
+    RADIUS = 16,
+}
 
 function Enemy:new(x, y)
     local enemy = {
@@ -15,6 +23,8 @@ function Enemy:new(x, y)
         scale_x = 1,
         scale_y = 1,
         time = 0,
+        is_dead = false,
+        health = 100,
     }
 
     setmetatable(enemy, self)
@@ -44,10 +54,27 @@ function Enemy:update(dt, player)
 end
 
 function Enemy:draw(sprite_batch, shadow_sprite_batch)
-    shadow_sprite_batch:add_shadow(Atlas.sprites["EvilPumpkin"], self.x, self.y, self.z, 0, self.scale_x, self.scale_y)
+    shadow_sprite_batch:add_shadow(SPRITE, self.x, self.y, self.z, 0, self.scale_x, self.scale_y)
 
-    sprite_batch:add_sprite(Atlas.sprites["EvilPumpkin"], self.x, self.y, self.z, 0, self.scale_x,
+    sprite_batch:add_sprite(SPRITE, self.x, self.y, self.z, 0, self.scale_x,
         self.scale_y)
+end
+
+function Enemy:take_damage(damage, particles)
+    if self.is_dead then return end
+
+    self.health = self.health - damage
+    for _ = 0, DAMAGE_PARTICLE_COUNT do
+        local x = self.x + math.random(-DAMAGE_PARTICLE_RADIUS, DAMAGE_PARTICLE_RADIUS)
+        local y = self.y + DAMAGE_PARTICLE_RADIUS
+        local z = math.random(DAMAGE_PARTICLE_MIN_HEIGHT, DAMAGE_PARTICLE_MAX_HEIGHT)
+        local angle = math.random() * math.pi * 2
+        table.insert(particles, Particle:new(x, y, z, angle))
+    end
+
+    if self.health <= 0 then
+        self.is_dead = true
+    end
 end
 
 return Enemy
