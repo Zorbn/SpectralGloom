@@ -137,7 +137,7 @@ end
 function Player:draw(sprite_batch, shadow_sprite_batch)
     local frame = self.animator:frame()
     sprite_batch:add_sprite(frame, self.x, self.y, 0, 0, self.direction)
-    shadow_sprite_batch:add_shadow(frame, self.x, self.y, 0, self.direction)
+    shadow_sprite_batch:add_shadow(frame, self.x, self.y, 0, 0, self.direction)
 
     local gun_angle = self.gun.angle
     if self.direction < 0 then
@@ -151,7 +151,7 @@ function Player:draw(sprite_batch, shadow_sprite_batch)
 
     sprite_batch:add_sprite(gun_sprite, self.gun.x, self.gun.y, 0, gun_angle, self.direction, 1, GUN_ORIGIN_X,
         GUN_ORIGIN_Y)
-    shadow_sprite_batch:add_shadow(gun_sprite, self.gun.x, self.gun.y, gun_angle, self.direction, 1, GUN_ORIGIN_X,
+    shadow_sprite_batch:add_shadow(gun_sprite, self.gun.x, self.gun.y, 0, gun_angle, self.direction, 1, GUN_ORIGIN_X,
         GUN_ORIGIN_Y)
 end
 

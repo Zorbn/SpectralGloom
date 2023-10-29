@@ -22,7 +22,7 @@ local SHADOW_SCALE_X = -1
 local SHADOW_SCALE_Y = 0.9
 local SHADOW_HEIGHT_SCALE = 0.01
 
-function SpriteBatch:add_shadow(sprite, x, y, z, scale_x, scale_y, origin_x, origin_y)
+function SpriteBatch:add_shadow(sprite, x, y, z, r, scale_x, scale_y, origin_x, origin_y)
     scale_x = scale_x or 1
     scale_y = scale_y or 1
     origin_x = origin_x or sprite.width * 0.5
@@ -35,7 +35,7 @@ function SpriteBatch:add_shadow(sprite, x, y, z, scale_x, scale_y, origin_x, ori
     local height_scale = z * SHADOW_HEIGHT_SCALE
     local shadow_scale_x = scale_x * (SHADOW_SCALE_X + height_scale)
     local shadow_scale_y = scale_y * (SHADOW_SCALE_Y - height_scale)
-    self.batch:add(sprite.quad, x + offset_x, y + offset_y, SHADOW_ROTATION, shadow_scale_x, shadow_scale_y,
+    self.batch:add(sprite.quad, x + offset_x, y + offset_y, SHADOW_ROTATION - r, shadow_scale_x, shadow_scale_y,
         origin_x, origin_y)
 end
 

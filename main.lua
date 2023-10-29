@@ -133,7 +133,7 @@ function love.draw()
     sprite_batch:clear()
     shadow_sprite_batch:clear()
 
-    shadow_sprite_batch:add_shadow(Atlas.sprites["EvilPumpkin"], PUMPKIN_X, PUMPKIN_Y, pumpkin_z, pumpkin_scale_x, pumpkin_scale_y)
+    shadow_sprite_batch:add_shadow(Atlas.sprites["EvilPumpkin"], PUMPKIN_X, PUMPKIN_Y, pumpkin_z, 0, pumpkin_scale_x, pumpkin_scale_y)
 
     sprite_batch:add_sprite(Atlas.sprites["EvilPumpkin"], PUMPKIN_X, PUMPKIN_Y, pumpkin_z, 0, pumpkin_scale_x,
         pumpkin_scale_y)
@@ -173,5 +173,5 @@ function love.draw()
 
     love.graphics.draw(canvas, 0, 0, 0, canvas_scale, canvas_scale)
 
-    love.graphics.print("hello world", 0, 0)
+    -- love.graphics.print("hello world", 0, 0)
 end
