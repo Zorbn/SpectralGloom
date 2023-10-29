@@ -47,7 +47,6 @@ function Player:new(x, y)
             angle = 0,
             x = 0,
             y = 0,
-            shadow_y = 0,
         },
     }
 
@@ -60,12 +59,9 @@ function Player:new(x, y)
     return player
 end
 
-function Player:update(dt, view_scale, bullets)
+function Player:update(dt, camera, bullets)
     self.animator:update(dt)
     self.gun.animator:update(dt)
-    local gun_frame = self.gun.animator:frame()
-    self.gun.x = self.x + GUN_X * self.direction
-    self.gun.y = self.y + gun_frame
 
     local motion_x = 0
     local motion_y = 0
@@ -91,8 +87,7 @@ function Player:update(dt, view_scale, bullets)
     end
 
     local mouse_x, mouse_y = love.mouse.getPosition()
-    mouse_x = mouse_x / view_scale
-    mouse_y = mouse_y / view_scale
+    mouse_x, mouse_y = camera:screen_to_world(mouse_x, mouse_y)
     self.gun.angle = math.atan2(mouse_y - self.gun.y, mouse_x - self.gun.x)
 
     if mouse_x < self.gun.x then
@@ -106,6 +101,10 @@ function Player:update(dt, view_scale, bullets)
     if love.mouse.isDown(1) and self.attack_cooldown_timer > ATTACK_COOLDOWN then
         self:attack(bullets)
     end
+
+    local gun_frame = self.gun.animator:frame()
+    self.gun.x = self.x + GUN_X * self.direction
+    self.gun.y = self.y + gun_frame
 end
 
 function Player:attack(bullets)

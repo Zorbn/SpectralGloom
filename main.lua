@@ -5,6 +5,7 @@ Atlas:load("res/atlas.png", "res/atlasInfo.txt")
 local SpriteBatch = require("sprite_batch")
 local Player = require("player")
 local GameMath = require("game_math")
+local Camera = require("camera")
 
 local VIEW_WIDTH, VIEW_HEIGHT = 640, 480
 local BG_R, BG_G, BG_B = 52 / 255, 28 / 255, 39 / 255
@@ -25,19 +26,13 @@ local sprite_batch = SpriteBatch:new(Atlas.image, 1000)
 local shadow_sprite_batch = SpriteBatch:new(Atlas.image, 1000)
 
 local player = Player:new(170, 170)
+local camera = Camera:new(VIEW_WIDTH, VIEW_HEIGHT)
 
-local canvas, shadow_canvas
-local canvas_scale = 1
+local shadow_canvas
 function love.resize(width, height)
-    local view_scale = math.min(width / VIEW_WIDTH, height / VIEW_HEIGHT);
-    -- Snap scaling to integer values only.
-    view_scale = math.max(1.0, math.floor(view_scale))
-
-    if canvas then canvas:release() end
-    local canvas_width, canvas_height = width / view_scale, height / view_scale
-    canvas = love.graphics.newCanvas(canvas_width, canvas_height)
-    shadow_canvas = love.graphics.newCanvas(canvas_width, canvas_height)
-    canvas_scale = view_scale
+    camera:resize(width, height)
+    if shadow_canvas then shadow_canvas:release() end
+    shadow_canvas = love.graphics.newCanvas(camera.canvas_width, camera.canvas_height)
 end
 
 love.resize(love.graphics.getDimensions())
@@ -107,7 +102,8 @@ function love.update(dt)
     pumpkin_scale_x = 1 - pumpkin_squash_stretch_progress * PUMPKIN_SQUASH_STRETCH
     pumpkin_scale_y = 1 + pumpkin_squash_stretch_progress * PUMPKIN_SQUASH_STRETCH
 
-    player:update(dt, canvas_scale, bullets)
+    player:update(dt, camera, bullets)
+    camera:center_on(player.x, player.y)
 
     for _, bullet in pairs(bullets) do
         bullet.x = bullet.x + bullet.dx * BULLET_MOVE_SPEED * dt
@@ -117,7 +113,7 @@ function love.update(dt)
 end
 
 function love.draw()
-    love.graphics.setCanvas(canvas)
+    camera:begin_draw_to()
     love.graphics.clear(BG_R, BG_G, BG_B)
 
     -- Draw ground decorations before everything else.
@@ -159,19 +155,20 @@ function love.draw()
         end
     end
 
+    camera:end_draw_to()
     love.graphics.setCanvas(shadow_canvas)
     love.graphics.clear(0, 0, 0, 0)
-    shadow_sprite_batch:draw()
+    shadow_sprite_batch:draw(-camera.x, -camera.y)
 
-    love.graphics.setCanvas(canvas)
+    camera:begin_draw_to()
     love.graphics.setShader(SHADOW_CANVAS_SHADER)
-    love.graphics.draw(shadow_canvas)
+    love.graphics.draw(shadow_canvas, camera.x, camera.y)
     love.graphics.setShader()
 
     sprite_batch:draw()
-    love.graphics.setCanvas()
+    camera:end_draw_to()
 
-    love.graphics.draw(canvas, 0, 0, 0, canvas_scale, canvas_scale)
+    camera:draw()
 
     -- love.graphics.print("hello world", 0, 0)
 end
