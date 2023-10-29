@@ -1,5 +1,6 @@
 local Atlas = require("atlas")
 local Animator = require("animator")
+local Bullet = require("bullet")
 
 local ANIMATION_SPEED = 10
 local ANIMATIONS = {
@@ -110,14 +111,7 @@ end
 function Player:attack(bullets)
     self.attack_cooldown_timer = 0
 
-    local new_bullet = {
-        x = self.gun.x,
-        y = self.gun.y,
-        angle = self.gun.angle,
-        dx = math.cos(self.gun.angle),
-        dy = math.sin(self.gun.angle),
-        time = 0,
-    }
+    local new_bullet = Bullet:new(self.gun.x, self.gun.y, self.gun.angle)
 
     -- Move the bullet forward in front of the gun's barrel.
     new_bullet.x = new_bullet.x + new_bullet.dx * BULLET_SPRITE.width
