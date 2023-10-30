@@ -123,22 +123,7 @@ function Map:draw(sprite_batch)
 end
 
 function Map.to_tile_position(x, y)
-    return math.floor(x / Map.TILE_SIZE), math.floor(y / Map.TILE_SIZE)
-end
-
-function Map:remove_enemy_from_tile(enemy)
-    local tile_x, tile_y = Map.to_tile_position(enemy.x, enemy.y)
-    if tile_x < 1 or tile_x > Map.WIDTH_TILES or tile_y < 1 or tile_y > Map.HEIGHT_TILES then
-        return
-    end
-
-    local tile_enemies = self.enemies_per_tile[GameMath.index_2d_to_1d(tile_x, tile_y, Map.WIDTH_TILES)]
-    for i = #tile_enemies, 1, -1 do
-        if tile_enemies[i] == enemy then
-            table.remove(tile_enemies, i)
-            break
-        end
-    end
+    return math.ceil(x / Map.TILE_SIZE), math.ceil(y / Map.TILE_SIZE)
 end
 
 function Map:add_enemy_to_tile(enemy)

@@ -33,9 +33,6 @@ function Enemy:new(x, y)
 end
 
 function Enemy:update(dt, map)
-    -- Remove this enemy from the tile it used to be in.
-    -- map:remove_enemy_from_tile(self)
-
     self.time = self.time + dt
     local jump_progress = math.abs(math.sin(self.time * BOUNCE_SPEED))
     self.z = jump_progress * BOUNCE_HEIGHT
@@ -69,18 +66,23 @@ function Enemy:update(dt, map)
             local dy = math.sin(angle) * repel_power
             self.x = self.x - dx
             self.y = self.y - dy
-            -- map:remove_enemy_from_tile(enemy)
             enemy.x = enemy.x + dx
             enemy.y = enemy.y + dy
-            -- map:add_enemy_to_tile(enemy)
+            -- NOTE: It would be better to set the velocities of self/enemy here
+            -- so that they can move on their own and perform their own collisions,
+            -- but this will work for now.
+            enemy.x = GameMath.clamp(enemy.x, 0, Map.WIDTH)
+            enemy.y = GameMath.clamp(enemy.y, 0, Map.HEIGHT)
         end
 
         ::continue::
     end
 
-    -- Add this enemy to the tile it is now in after moving.
-    -- map:add_enemy_to_tile(self)
+    self.x = GameMath.clamp(self.x, 0, Map.WIDTH)
+    self.y = GameMath.clamp(self.y, 0, Map.HEIGHT)
 end
+
+
 
 function Enemy:draw(sprite_batch, shadow_sprite_batch)
     shadow_sprite_batch:add_shadow(SPRITE, self.x, self.y, self.z, 0, self.scale_x, self.scale_y)
