@@ -1,7 +1,3 @@
-local Atlas = require("atlas")
-local Animator = require("animator")
-local Bullet = require("bullet")
-
 local ANIMATION_SPEED = 10
 local ANIMATIONS = {
     idle = {
@@ -34,7 +30,7 @@ local GUN_ORIGIN_Y = 7
 local MOVE_SPEED = 120
 local ATTACK_COOLDOWN = 0.2
 
-local Player = {}
+Player = {}
 
 function Player:new(x, y)
     local player = {
@@ -79,6 +75,8 @@ function Player:update(dt, camera, bullets)
 
         self.x = self.x + motion_x * MOVE_SPEED * dt
         self.y = self.y + motion_y * MOVE_SPEED * dt
+        self.x = GameMath.clamp(self.x, 0, Map.WIDTH)
+        self.y = GameMath.clamp(self.y, 0, Map.HEIGHT)
 
         self.animator:play("running")
         self.gun.animator:play("running")
@@ -147,5 +145,3 @@ function Player:draw(sprite_batch, shadow_sprite_batch)
     shadow_sprite_batch:add_shadow(gun_sprite, self.gun.x, self.gun.y, 0, gun_angle, self.direction, 1, GUN_ORIGIN_X,
         GUN_ORIGIN_Y)
 end
-
-return Player

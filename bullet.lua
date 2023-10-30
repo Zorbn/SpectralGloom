@@ -1,8 +1,3 @@
-local Atlas = require("atlas")
-local GameMath = require("game_math")
-local Map = require("map")
-local Enemy = require("enemy")
-
 local RADIUS = 6
 local DAMAGE = 20
 local SPRITE = Atlas.sprites["Bullet"]
@@ -17,7 +12,7 @@ local COLOR_R = 232 / 255
 local COLOR_G = 193 / 255
 local COLOR_B = 112 / 255
 
-local Bullet = {
+Bullet = {
     pool = {},
     allocation_count = 0,
 }
@@ -45,7 +40,7 @@ function Bullet:new(x, y, angle)
     return bullet
 end
 
-function Bullet:release()
+function Bullet:recycle()
     table.insert(Bullet.pool, self)
 end
 
@@ -82,5 +77,3 @@ function Bullet:draw(sprite_batch, _)
     sprite_batch:add_sprite(SPRITE, self.x, self.y, 0, self.angle, scale, scale)
     sprite_batch:set_color(1, 1, 1, 1)
 end
-
-return Bullet

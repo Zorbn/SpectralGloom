@@ -1,4 +1,4 @@
-local Camera = {}
+Camera = {}
 
 function Camera:new(width, height)
     local camera = {
@@ -56,5 +56,3 @@ function Camera:screen_to_world(x, y)
 
     return world_x, world_y
 end
-
-return Camera

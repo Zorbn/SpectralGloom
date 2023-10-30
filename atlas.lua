@@ -1,4 +1,4 @@
-local Atlas = {}
+Atlas = {}
 
 function Atlas:load(image_path, info_path)
     self.image = love.graphics.newImage(image_path)
@@ -18,5 +18,3 @@ function Atlas:load(image_path, info_path)
         }
     end
 end
-
-return Atlas

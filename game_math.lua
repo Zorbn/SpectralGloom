@@ -1,4 +1,4 @@
-local GameMath = {}
+GameMath = {}
 
 function GameMath.lerp2(a, b, delta, is_smooth)
     if is_smooth then
@@ -25,4 +25,10 @@ function GameMath.distance(x1, y1, x2, y2)
     return math.sqrt(dx * dx + dy * dy)
 end
 
-return GameMath
+function GameMath.clamp(x, min, max)
+    return math.min(math.max(x, min), max)
+end
+
+function GameMath.index_2d_to_1d(x, y, width)
+    return x + (y - 1) * width
+end

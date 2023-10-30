@@ -1,4 +1,4 @@
-local SpriteBatch = {}
+SpriteBatch = {}
 
 function SpriteBatch:new(image, max_sprites)
     local sprite_batch = {}
@@ -50,5 +50,3 @@ end
 function SpriteBatch:set_color(r, g, b, a)
     self.batch:setColor(r, g, b, a)
 end
-
-return SpriteBatch

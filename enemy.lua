@@ -1,6 +1,3 @@
-local Atlas = require("atlas")
-local Particle = require("particle")
-
 local SPRITE = Atlas.sprites["EvilPumpkin"]
 local MOVE_SPEED = 80
 local BOUNCE_SPEED = 9
@@ -11,7 +8,7 @@ local DAMAGE_PARTICLE_RADIUS = SPRITE.width * 0.5
 local DAMAGE_PARTICLE_MIN_HEIGHT = 0
 local DAMAGE_PARTICLE_MAX_HEIGHT = SPRITE.height
 
-local Enemy = {
+Enemy = {
     RADIUS = 16,
 }
 
@@ -20,6 +17,8 @@ function Enemy:new(x, y)
         x = x,
         y = y,
         z = 0,
+        dx = 0,
+        dy = 0,
         scale_x = 1,
         scale_y = 1,
         time = 0,
@@ -33,7 +32,10 @@ function Enemy:new(x, y)
     return enemy
 end
 
-function Enemy:update(dt, player)
+function Enemy:update(dt, map)
+    -- Remove this enemy from the tile it used to be in.
+    -- map:remove_enemy_from_tile(self)
+
     self.time = self.time + dt
     local jump_progress = math.abs(math.sin(self.time * BOUNCE_SPEED))
     self.z = jump_progress * BOUNCE_HEIGHT
@@ -41,8 +43,8 @@ function Enemy:update(dt, player)
     self.scale_x = 1 - squash_stretch_progress * SQUASH_STRETCH
     self.scale_y = 1 + squash_stretch_progress * SQUASH_STRETCH
 
-    local motion_x = player.x - self.x
-    local motion_y = player.y - self.y
+    local motion_x = map.player.x - self.x
+    local motion_y = map.player.y - self.y
     local motion_magnitude = math.sqrt(motion_x * motion_x + motion_y * motion_y)
     if motion_magnitude ~= 0 then
         motion_x = motion_x / motion_magnitude
@@ -51,6 +53,33 @@ function Enemy:update(dt, player)
         self.x = self.x + motion_x * MOVE_SPEED * dt
         self.y = self.y + motion_y * MOVE_SPEED * dt
     end
+
+    local combined_radius = Enemy.RADIUS * 2
+    local nearby_enemies = map:nearby_enemies(self.x, self.y)
+    for _, enemy in pairs(nearby_enemies) do
+        if enemy == self then
+            goto continue
+        end
+
+        local distance = GameMath.distance(self.x, self.y, enemy.x, enemy.y)
+        if distance < combined_radius then
+            local angle = math.atan2(enemy.y - self.y, enemy.x - self.x)
+            local repel_power = (combined_radius - distance) / combined_radius
+            local dx = math.cos(angle) * repel_power
+            local dy = math.sin(angle) * repel_power
+            self.x = self.x - dx
+            self.y = self.y - dy
+            -- map:remove_enemy_from_tile(enemy)
+            enemy.x = enemy.x + dx
+            enemy.y = enemy.y + dy
+            -- map:add_enemy_to_tile(enemy)
+        end
+
+        ::continue::
+    end
+
+    -- Add this enemy to the tile it is now in after moving.
+    -- map:add_enemy_to_tile(self)
 end
 
 function Enemy:draw(sprite_batch, shadow_sprite_batch)
@@ -69,12 +98,11 @@ function Enemy:take_damage(damage, particles)
         local y = self.y + DAMAGE_PARTICLE_RADIUS
         local z = math.random(DAMAGE_PARTICLE_MIN_HEIGHT, DAMAGE_PARTICLE_MAX_HEIGHT)
         local angle = math.random() * math.pi * 2
-        table.insert(particles, Particle:new(x, y, z, angle))
+        local type = math.random(Particle.TYPE_PUMPKIN_LIGHT, Particle.TYPE_PUMPKIN_DARK)
+        table.insert(particles, Particle:new(x, y, z, angle, type))
     end
 
     if self.health <= 0 then
         self.is_dead = true
     end
 end
-
-return Enemy

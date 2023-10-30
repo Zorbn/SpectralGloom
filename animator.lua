@@ -1,4 +1,4 @@
-local Animator = {}
+Animator = {}
 
 function Animator:new(animations, animation_speed)
     local animator = {
@@ -41,5 +41,3 @@ end
 function Animator:frame()
     return self.animation[self.animation_frame]
 end
-
-return Animator
