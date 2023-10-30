@@ -44,7 +44,7 @@ function Bullet:recycle()
     table.insert(Bullet.pool, self)
 end
 
-function Bullet:update(dt, enemies, particles)
+function Bullet:update(dt, map)
     self.x = self.x + self.dx * MOVE_SPEED * dt
     self.y = self.y + self.dy * MOVE_SPEED * dt
     self.time = self.time + dt
@@ -54,12 +54,13 @@ function Bullet:update(dt, enemies, particles)
         return
     end
 
-    for _, enemy in pairs(enemies) do
+    local nearby_enemies = map:nearby_enemies(self.x, self.y)
+    for _, enemy in pairs(nearby_enemies) do
         local distance = GameMath.distance(self.x, self.y, enemy.x, enemy.y)
 
         if distance < RADIUS + Enemy.RADIUS then
             self.is_dead = true
-            enemy:take_damage(DAMAGE, particles)
+            enemy:take_damage(DAMAGE, map.particles)
             return
         end
     end

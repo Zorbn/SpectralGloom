@@ -55,12 +55,6 @@ end
 function love.update(dt)
     -- print(love.timer.getFPS())
 
-    local count = 0
-    for i = 1, Map.WIDTH_TILES * Map.HEIGHT_TILES do
-        count = count + #map.enemies_per_tile[i]
-    end
-    print(count)
-
     table_clear(drawables)
     map:update(dt, drawables, camera)
     table.sort(drawables, sort_drawables)

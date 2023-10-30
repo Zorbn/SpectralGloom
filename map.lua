@@ -37,9 +37,8 @@ function Map:new()
 end
 
 function Map:init()
-    -- TODO: Figure out map 1-based indexing stuff
-    for y = 0, Map.HEIGHT_TILES do
-        for x = 0, Map.WIDTH_TILES do
+    for y = 1, Map.HEIGHT_TILES do
+        for x = 1, Map.WIDTH_TILES do
             if math.random() > DECORATION_DENSITY then
                 goto continue
             end
@@ -69,6 +68,9 @@ function Map:update(dt, drawables, camera)
     table.insert(drawables, self.player)
     camera:center_on(self.player.x, self.player.y)
 
+    for i = 1, Map.WIDTH_TILES * Map.HEIGHT_TILES do
+        table_clear(self.enemies_per_tile[i])
+    end
     for _, enemy in pairs(self.enemies) do
         self:add_enemy_to_tile(enemy)
     end
@@ -84,17 +86,12 @@ function Map:update(dt, drawables, camera)
         end
     end
 
-    for i = 1, Map.WIDTH_TILES * Map.HEIGHT_TILES do
-        table_clear(self.enemies_per_tile[i])
-    end
-
     -- print("Particles:", Particle.allocation_count, "Bullets:", Bullet.allocation_count)
 
     -- local bullet_update_start = os.clock()
-    -- TODO: Use nearby enemies for bullets.
     for i = #self.bullets, 1, -1 do
         local bullet = self.bullets[i]
-        bullet:update(dt, self.enemies, self.particles)
+        bullet:update(dt, self)
 
         if bullet.is_dead then
             table.remove(self.bullets, i)
@@ -126,7 +123,7 @@ function Map:draw(sprite_batch)
 end
 
 function Map.to_tile_position(x, y)
-    return math.ceil(x / Map.TILE_SIZE), math.floor(y / Map.TILE_SIZE)
+    return math.floor(x / Map.TILE_SIZE), math.floor(y / Map.TILE_SIZE)
 end
 
 function Map:remove_enemy_from_tile(enemy)
