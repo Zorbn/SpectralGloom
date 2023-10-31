@@ -3,6 +3,7 @@ local table_clear = require("table.clear")
 Map = {}
 
 Map.TILE_SIZE = 32
+Map.BORDER_SIZE = Map.TILE_SIZE * 0.5
 Map.WIDTH_TILES = 40
 Map.HEIGHT_TILES = 20
 Map.WIDTH = Map.WIDTH_TILES * Map.TILE_SIZE
@@ -14,6 +15,8 @@ local DECORATION_SPRITES = {
     [1] = Atlas.sprites["Weeds1"],
     [2] = Atlas.sprites["Weeds2"],
 }
+local BG_R, BG_G, BG_B = 52 / 255, 28 / 255, 39 / 255
+local BORDER_SPRITE = Atlas.sprites["BorderShadow"]
 
 function Map:new()
     local map = {
@@ -117,8 +120,34 @@ function Map:update(dt, drawables, camera)
 end
 
 function Map:draw(sprite_batch)
+    love.graphics.setColor(BG_R, BG_G, BG_B, 1)
+    love.graphics.rectangle("fill", -Map.BORDER_SIZE, -Map.BORDER_SIZE, Map.WIDTH + Map.BORDER_SIZE * 2, Map.HEIGHT + Map.BORDER_SIZE * 2)
+    love.graphics.setColor(1, 1, 1, 1)
+
+    -- Allow the draw function to be called once and cached into a sprite batch, then
+    -- called each frame to only draw the non-sprites.
+    if not sprite_batch then
+        return
+    end
+
     for _, decoration in pairs(self.decorations) do
         sprite_batch:add_sprite(DECORATION_SPRITES[decoration.type], decoration.x, decoration.y, 0)
+    end
+
+    for x = 0, Map.WIDTH_TILES do
+        sprite_batch:add_sprite(BORDER_SPRITE, x * Map.TILE_SIZE, -Map.BORDER_SIZE, 0, 0)
+    end
+
+    for x = 0, Map.WIDTH_TILES do
+        sprite_batch:add_sprite(BORDER_SPRITE, x * Map.TILE_SIZE, Map.HEIGHT + Map.BORDER_SIZE, 0, math.pi)
+    end
+
+    for y = 0, Map.WIDTH_TILES do
+        sprite_batch:add_sprite(BORDER_SPRITE, -Map.BORDER_SIZE, y * Map.TILE_SIZE, 0, math.pi * 1.5)
+    end
+
+    for y = 0, Map.WIDTH_TILES do
+        sprite_batch:add_sprite(BORDER_SPRITE, Map.WIDTH + Map.BORDER_SIZE, y * Map.TILE_SIZE, 0, math.pi * 0.5)
     end
 end
 

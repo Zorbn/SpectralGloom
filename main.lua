@@ -15,7 +15,7 @@ require("player")
 require("sprite_batch")
 
 local VIEW_WIDTH, VIEW_HEIGHT = 640, 480
-local BG_R, BG_G, BG_B = 52 / 255, 28 / 255, 39 / 255
+local BG_R, BG_G, BG_B = 16 / 255, 20 / 255, 31 / 255
 local SHADOW_CANVAS_SHADER = love.graphics.newShader([[
 const vec4 shadow_color = vec4(9.0, 10.0, 20.0, 120.0) / 255.0;
 
@@ -30,12 +30,14 @@ vec4 effect(vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
 ]])
 
 local sprite_batch = SpriteBatch:new(Atlas.image, 1000)
+local map_sprite_batch = SpriteBatch:new(Atlas.image, 1000)
 local shadow_sprite_batch = SpriteBatch:new(Atlas.image, 1000)
 
 local camera = Camera:new(VIEW_WIDTH, VIEW_HEIGHT)
 local map = Map:new()
 math.randomseed(777)
 map:init()
+map:draw(map_sprite_batch)
 
 local shadow_canvas
 function love.resize(width, height)
@@ -65,11 +67,8 @@ function love.draw()
     love.graphics.clear(BG_R, BG_G, BG_B)
 
     -- Draw ground decorations before everything else.
-    sprite_batch:clear()
-
-    map:draw(sprite_batch)
-
-    sprite_batch:draw()
+    map:draw(nil)
+    map_sprite_batch:draw()
 
     -- Now draw shadows and other sprites.
     sprite_batch:clear()
@@ -92,6 +91,7 @@ function love.draw()
     love.graphics.setShader()
 
     sprite_batch:draw()
+
     camera:end_draw_to()
 
     camera:draw()
