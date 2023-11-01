@@ -3,10 +3,6 @@ local MOVE_SPEED = 80
 local BOUNCE_SPEED = 9
 local BOUNCE_HEIGHT = 8
 local SQUASH_STRETCH = 0.1
-local DAMAGE_PARTICLE_COUNT = 3
-local DAMAGE_PARTICLE_RADIUS = SPRITE.width * 0.5
-local DAMAGE_PARTICLE_MIN_HEIGHT = 0
-local DAMAGE_PARTICLE_MAX_HEIGHT = SPRITE.height
 
 Enemy = {
     RADIUS = 16,
@@ -82,8 +78,6 @@ function Enemy:update(dt, map)
     self.y = GameMath.clamp(self.y, 0, Map.HEIGHT)
 end
 
-
-
 function Enemy:draw(sprite_batch, shadow_sprite_batch)
     shadow_sprite_batch:add_shadow(SPRITE, self.x, self.y, self.z, 0, self.scale_x, self.scale_y)
 
@@ -95,14 +89,7 @@ function Enemy:take_damage(damage, particles)
     if self.is_dead then return end
 
     self.health = self.health - damage
-    for _ = 0, DAMAGE_PARTICLE_COUNT do
-        local x = self.x + math.random(-DAMAGE_PARTICLE_RADIUS, DAMAGE_PARTICLE_RADIUS)
-        local y = self.y + DAMAGE_PARTICLE_RADIUS
-        local z = math.random(DAMAGE_PARTICLE_MIN_HEIGHT, DAMAGE_PARTICLE_MAX_HEIGHT)
-        local angle = math.random() * math.pi * 2
-        local type = math.random(Particle.TYPE_PUMPKIN_LIGHT, Particle.TYPE_PUMPKIN_DARK)
-        table.insert(particles, Particle:new(x, y, z, angle, type))
-    end
+    Particle.spawn_damage_particles(particles, self.x, self.y, Particle.TYPE_PUMPKIN_LIGHT, Particle.TYPE_PUMPKIN_DARK)
 
     if self.health <= 0 then
         self.is_dead = true

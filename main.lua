@@ -13,6 +13,8 @@ require("map")
 require("particle")
 require("player")
 require("sprite_batch")
+require("gravestone")
+require("gravestone_destroyed")
 
 local VIEW_WIDTH, VIEW_HEIGHT = 640, 480
 local BG_R, BG_G, BG_B = 16 / 255, 20 / 255, 31 / 255
@@ -97,6 +99,4 @@ function love.draw()
     camera:draw()
 
     love.graphics.print(math.floor(collectgarbage("count")) / 1000 .. "mb", 0, 0)
-
-    -- love.graphics.print("hello world", 0, 0)
 end

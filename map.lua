@@ -17,16 +17,20 @@ local DECORATION_SPRITES = {
 }
 local BG_R, BG_G, BG_B = 52 / 255, 28 / 255, 39 / 255
 local BORDER_SPRITE = Atlas.sprites["BorderShadow"]
+local MAX_GRAVESTONE_COUNT = 6
 
 function Map:new()
     local map = {
-        decorations = {},
         enemies = {},
         bullets = {},
         particles = {},
-        player = Player:new(170, 170),
-        enemies_per_tile = {},
+        decorations = {},
+        gravestones = {},
+        gravestones_destroyed = {},
         nearby_cache = {},
+        enemies_per_tile = {},
+        player = Player:new(170, 170),
+        max_enemies_per_gravestone = 1,
     }
 
     setmetatable(map, self)
@@ -56,13 +60,14 @@ function Map:init()
                 type = decoration_type,
             })
 
-            -- TODO:
-            if math.random() > 0.2 then
-                table.insert(self.enemies, Enemy:new(decoration_x, decoration_y))
-            end
-
             ::continue::
         end
+    end
+
+    for _ = 1, MAX_GRAVESTONE_COUNT do
+        local x = math.random(0, Map.WIDTH)
+        local y = math.random(0, Map.HEIGHT)
+        table.insert(self.gravestones, Gravestone:new(x, y))
     end
 end
 
@@ -116,6 +121,24 @@ function Map:update(dt, drawables, camera)
         else
             table.insert(drawables, particle)
         end
+    end
+
+    for i = #self.gravestones, 1, -1 do
+        local gravestone = self.gravestones[i]
+
+        gravestone:update(self)
+
+        if gravestone.is_dead then
+            table.remove(self.gravestones, i)
+            table.insert(self.gravestones_destroyed, GravestoneDestroyed:new(gravestone.x, gravestone.y))
+            self.max_enemies_per_gravestone = self.max_enemies_per_gravestone * 2
+        else
+            table.insert(drawables, gravestone)
+        end
+    end
+
+    for _, gravestone_destroyed in pairs(self.gravestones_destroyed) do
+        table.insert(drawables, gravestone_destroyed)
     end
 end
 

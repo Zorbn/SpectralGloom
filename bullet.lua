@@ -56,14 +56,28 @@ function Bullet:update(dt, map)
 
     local nearby_enemies = map:nearby_enemies(self.x, self.y)
     for _, enemy in pairs(nearby_enemies) do
-        local distance = GameMath.distance(self.x, self.y, enemy.x, enemy.y)
-
-        if distance < RADIUS + Enemy.RADIUS then
-            self.is_dead = true
-            enemy:take_damage(DAMAGE, map.particles)
+        if self:try_hit(enemy, Enemy.RADIUS, map.particles) then
             return
         end
     end
+
+    for _, gravestone in pairs(map.gravestones) do
+        if self:try_hit(gravestone, Gravestone.RADIUS, map.particles) then
+            return
+        end
+    end
+end
+
+function Bullet:try_hit(other, other_radius, particles)
+    local distance = GameMath.distance(self.x, self.y, other.x, other.y)
+
+    if distance < RADIUS + other_radius then
+        self.is_dead = true
+        other:take_damage(DAMAGE, particles)
+        return true
+    end
+
+    return false
 end
 
 function Bullet:draw(sprite_batch, _)
