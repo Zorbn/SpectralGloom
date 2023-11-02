@@ -144,7 +144,8 @@ end
 
 function Map:draw(sprite_batch)
     love.graphics.setColor(BG_R, BG_G, BG_B, 1)
-    love.graphics.rectangle("fill", -Map.BORDER_SIZE, -Map.BORDER_SIZE, Map.WIDTH + Map.BORDER_SIZE * 2, Map.HEIGHT + Map.BORDER_SIZE * 2)
+    love.graphics.rectangle("fill", -Map.BORDER_SIZE, -Map.BORDER_SIZE, Map.WIDTH + Map.BORDER_SIZE * 2,
+        Map.HEIGHT + Map.BORDER_SIZE * 2)
     love.graphics.setColor(1, 1, 1, 1)
 
     -- Allow the draw function to be called once and cached into a sprite batch, then

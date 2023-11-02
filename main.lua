@@ -16,6 +16,7 @@ require("sprite_batch")
 require("gravestone")
 require("gravestone_destroyed")
 
+local MAX_DELTA_TIME = 0.1
 local VIEW_WIDTH, VIEW_HEIGHT = 640, 480
 local BG_R, BG_G, BG_B = 16 / 255, 20 / 255, 31 / 255
 local SHADOW_CANVAS_SHADER = love.graphics.newShader([[
@@ -57,7 +58,10 @@ local function sort_drawables(a, b)
 end
 
 function love.update(dt)
-    -- print(love.timer.getFPS())
+    -- Ignore massive delta time values caused by dragging the window, etc.
+    if dt > MAX_DELTA_TIME then
+        return
+    end
 
     table_clear(drawables)
     map:update(dt, drawables, camera)
