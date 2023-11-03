@@ -3,6 +3,7 @@ local MOVE_SPEED = 80
 local BOUNCE_SPEED = 9
 local BOUNCE_HEIGHT = 8
 local SQUASH_STRETCH = 0.1
+local DAMAGE = 10
 
 Enemy = {
     RADIUS = 16,
@@ -76,6 +77,8 @@ function Enemy:update(dt, map)
 
     self.x = GameMath.clamp(self.x, 0, Map.WIDTH)
     self.y = GameMath.clamp(self.y, 0, Map.HEIGHT)
+
+    Entity.try_hit(self, Enemy.RADIUS, DAMAGE, map.player, Player.RADIUS, map.particles)
 end
 
 function Enemy:draw(sprite_batch, shadow_sprite_batch)

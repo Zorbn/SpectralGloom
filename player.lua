@@ -10,6 +10,7 @@ local ANIMATIONS = {
         Atlas.sprites["Farmer"],
     },
 }
+local PLAYER_HEIGHT = 32
 local BULLET_SPRITE = Atlas.sprites["Bullet"]
 local GUN_SPRITE = Atlas.sprites["Gun"]
 local GUN_FIRING_SPRITE = Atlas.sprites["GunFiring"]
@@ -29,16 +30,24 @@ local GUN_ORIGIN_X = 4
 local GUN_ORIGIN_Y = 7
 local MOVE_SPEED = 120
 local ATTACK_COOLDOWN = 0.2
+local MAX_HEALTH = 100
+local HIT_INVINCIBILITY_TIME = 0.2
+local HIT_SHOW_HEALTHBAR_TIME = 0.6
 
-Player = {}
+Player = {
+    RADIUS = 16,
+}
 
 function Player:new(x, y)
     local player = {
         x = x,
         y = y,
+        health = MAX_HEALTH,
+        is_dead = false,
+        hit_invincibility_timer = HIT_SHOW_HEALTHBAR_TIME,
         animator = Animator:new(ANIMATIONS, ANIMATION_SPEED),
         direction = 1,
-        attack_cooldown_timer = 0,
+        attack_cooldown_timer = ATTACK_COOLDOWN,
         gun = {
             animator = Animator:new(GUN_Y_ANIMATIONS, ANIMATION_SPEED),
             angle = 0,
@@ -57,6 +66,10 @@ function Player:new(x, y)
 end
 
 function Player:update(dt, camera, bullets)
+    if self.is_dead then return end
+
+    self.hit_invincibility_timer = self.hit_invincibility_timer + dt
+
     self.animator:update(dt)
     self.gun.animator:update(dt)
 
@@ -144,4 +157,24 @@ function Player:draw(sprite_batch, shadow_sprite_batch)
         GUN_ORIGIN_Y)
     shadow_sprite_batch:add_shadow(gun_sprite, self.gun.x, self.gun.y, 0, gun_angle, self.direction, 1, GUN_ORIGIN_X,
         GUN_ORIGIN_Y)
+
+    if self.hit_invincibility_timer < HIT_SHOW_HEALTHBAR_TIME then
+        local health_bar_x = self.x - Healthbar.WIDTH * 0.5
+        local health_bar_y = self.y + PLAYER_HEIGHT * 0.5
+        Healthbar.draw(sprite_batch, health_bar_x, health_bar_y, self.health, MAX_HEALTH)
+    end
+end
+
+function Player:take_damage(damage, particles)
+    if self.is_dead then return end
+    if self.hit_invincibility_timer < HIT_INVINCIBILITY_TIME then return end
+
+    self.health = self.health - damage
+    self.hit_invincibility_timer = 0
+    Particle.spawn_damage_particles(particles, self.x, self.y, Particle.TYPE_PLAYER_LIGHT,
+        Particle.TYPE_PLAYER_DARK)
+
+    if self.health <= 0 then
+        self.is_dead = true
+    end
 end

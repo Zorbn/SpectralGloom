@@ -14,6 +14,8 @@ Particle = {
     TYPE_PUMPKIN_DARK = 2,
     TYPE_GRAVESTONE_LIGHT = 3,
     TYPE_GRAVESTONE_DARK = 4,
+    TYPE_PLAYER_LIGHT = 5,
+    TYPE_PLAYER_DARK = 6,
     pool = {},
     allocation_count = 0,
 }
@@ -38,6 +40,16 @@ local PARTICLE_COLORS = {
         r = 32 / 255,
         g = 46 / 255,
         b = 55 / 255,
+    },
+    [Particle.TYPE_PLAYER_LIGHT] = {
+        r = 165 / 255,
+        g = 48 / 255,
+        b = 48 / 255,
+    },
+    [Particle.TYPE_PLAYER_DARK] = {
+        r = 117 / 255,
+        g = 36 / 255,
+        b = 56 / 255,
     },
 }
 

@@ -15,6 +15,8 @@ require("player")
 require("sprite_batch")
 require("gravestone")
 require("gravestone_destroyed")
+require("healthbar")
+require("entity")
 
 local MAX_DELTA_TIME = 0.1
 local VIEW_WIDTH, VIEW_HEIGHT = 640, 480
