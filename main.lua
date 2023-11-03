@@ -18,6 +18,7 @@ require("gravestone_destroyed")
 require("healthbar")
 require("entity")
 
+local RESTART_TIME = 3
 local MAX_DELTA_TIME = 0.1
 local VIEW_WIDTH, VIEW_HEIGHT = 640, 480
 local BG_R, BG_G, BG_B = 16 / 255, 20 / 255, 31 / 255
@@ -38,6 +39,7 @@ local sprite_batch = SpriteBatch:new(Atlas.image, 1000)
 local map_sprite_batch = SpriteBatch:new(Atlas.image, 1000)
 local shadow_sprite_batch = SpriteBatch:new(Atlas.image, 1000)
 
+local restart_timer = 0
 local camera = Camera:new(VIEW_WIDTH, VIEW_HEIGHT)
 local map = Map:new()
 math.randomseed(777)
@@ -63,6 +65,15 @@ function love.update(dt)
     -- Ignore massive delta time values caused by dragging the window, etc.
     if dt > MAX_DELTA_TIME then
         return
+    end
+
+    if map.player.is_dead then
+        restart_timer = restart_timer + dt
+        if restart_timer > RESTART_TIME then
+            restart_timer = 0
+            map = Map:new()
+            map:init()
+        end
     end
 
     table_clear(drawables)

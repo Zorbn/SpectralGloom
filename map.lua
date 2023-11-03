@@ -69,6 +69,10 @@ function Map:init()
         local y = math.random(0, Map.HEIGHT)
         table.insert(self.gravestones, Gravestone:new(x, y))
     end
+
+    -- Right after initializing the map is a good time to collect garbage
+    -- to clean up any previous maps.
+    collectgarbage("collect")
 end
 
 function Map:update(dt, drawables, camera)

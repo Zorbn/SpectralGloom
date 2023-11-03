@@ -18,7 +18,7 @@ Healthbar = {
 }
 
 function Healthbar.draw(sprite_batch, x, y, health, max_health)
-    local health_bar_filled_percentage = health / max_health
+    local health_bar_filled_percentage = math.max(health / max_health, 0)
 
     sprite_batch:set_color(HEALTH_BAR_BG_R, HEALTH_BAR_BG_G, HEALTH_BAR_BG_B, 1)
     sprite_batch:add_sprite(SQUARE_SPRITE, x, y, 0, 0,
