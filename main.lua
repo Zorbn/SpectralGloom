@@ -119,7 +119,7 @@ function love.draw()
 
     if map.state == Map.STATE_WIN then
         love.graphics.draw(Atlas.image, YOU_WIN_SPRITE.quad,
-            camera.x + camera.canvas_width * 0.5, camera.y + camera.canvas_height * 0.5,
+            camera.x + camera.canvas_width * 0.5, camera.y + camera.canvas_height * 0.4,
             0, 1, 1, YOU_WIN_SPRITE.width * 0.5, YOU_WIN_SPRITE.height * 0.5)
 
         if love.keyboard.isDown("space") then
