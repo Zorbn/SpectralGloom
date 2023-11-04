@@ -1,6 +1,10 @@
 local table_clear = require("table.clear")
 
-Map = {}
+Map = {
+    STATE_IN_GAME = 0,
+    STATE_GAME_OVER = 1,
+    STATE_WIN = 2,
+}
 
 Map.TILE_SIZE = 32
 Map.BORDER_SIZE = Map.TILE_SIZE * 0.5
@@ -31,6 +35,7 @@ function Map:new()
         enemies_per_tile = {},
         player = Player:new(170, 170),
         max_enemies_per_gravestone = 1,
+        state = Map.STATE_IN_GAME,
     }
 
     setmetatable(map, self)
@@ -143,6 +148,14 @@ function Map:update(dt, drawables, camera)
 
     for _, gravestone_destroyed in pairs(self.gravestones_destroyed) do
         table.insert(drawables, gravestone_destroyed)
+    end
+
+    if self.state == Map.STATE_IN_GAME then
+        if self.player.is_dead then
+            self.state = Map.STATE_GAME_OVER
+        elseif #self.enemies == 0 and #self.gravestones == 0 then
+            self.state = Map.STATE_WIN
+        end
     end
 end
 

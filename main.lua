@@ -18,6 +18,7 @@ require("gravestone_destroyed")
 require("healthbar")
 require("entity")
 
+local YOU_WIN_SPRITE = Atlas.sprites["YouWin"]
 local RESTART_TIME = 3
 local MAX_DELTA_TIME = 0.1
 local VIEW_WIDTH, VIEW_HEIGHT = 640, 480
@@ -41,10 +42,16 @@ local shadow_sprite_batch = SpriteBatch:new(Atlas.image, 1000)
 
 local restart_timer = 0
 local camera = Camera:new(VIEW_WIDTH, VIEW_HEIGHT)
-local map = Map:new()
+local map
+local function reset_map()
+    map = Map:new()
+    map:init()
+    map_sprite_batch:clear()
+    map:draw(map_sprite_batch)
+end
+
 math.randomseed(777)
-map:init()
-map:draw(map_sprite_batch)
+reset_map()
 
 local shadow_canvas
 function love.resize(width, height)
@@ -67,12 +74,11 @@ function love.update(dt)
         return
     end
 
-    if map.player.is_dead then
+    if map.state == Map.STATE_GAME_OVER then
         restart_timer = restart_timer + dt
         if restart_timer > RESTART_TIME then
             restart_timer = 0
-            map = Map:new()
-            map:init()
+            reset_map()
         end
     end
 
@@ -111,9 +117,19 @@ function love.draw()
 
     sprite_batch:draw()
 
+    if map.state == Map.STATE_WIN then
+        love.graphics.draw(Atlas.image, YOU_WIN_SPRITE.quad,
+            camera.x + camera.canvas_width * 0.5, camera.y + camera.canvas_height * 0.5,
+            0, 1, 1, YOU_WIN_SPRITE.width * 0.5, YOU_WIN_SPRITE.height * 0.5)
+
+        if love.keyboard.isDown("space") then
+            reset_map()
+        end
+    end
+
     camera:end_draw_to()
 
     camera:draw()
 
-    love.graphics.print(math.floor(collectgarbage("count")) / 1000 .. "mb", 0, 0)
+    -- love.graphics.print(math.floor(collectgarbage("count")) / 1000 .. "mb", 0, 0)
 end
