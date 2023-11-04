@@ -80,6 +80,14 @@ function love.update(dt)
             restart_timer = 0
             reset_map()
         end
+    elseif map.state == Map.STATE_WIN then
+        if love.keyboard.isDown("space") then
+            reset_map()
+        end
+    end
+
+    if love.keyboard.isDown("escape") then
+        love.event.quit()
     end
 
     table_clear(drawables)
@@ -121,10 +129,6 @@ function love.draw()
         love.graphics.draw(Atlas.image, YOU_WIN_SPRITE.quad,
             camera.x + camera.canvas_width * 0.5, camera.y + camera.canvas_height * 0.4,
             0, 1, 1, YOU_WIN_SPRITE.width * 0.5, YOU_WIN_SPRITE.height * 0.5)
-
-        if love.keyboard.isDown("space") then
-            reset_map()
-        end
     end
 
     camera:end_draw_to()
